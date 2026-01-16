@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>God's Name Clicker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 50%, #f59e0b 100%);
+            min-height: 100vh;
+            padding: 32px;
+        }
+
+        .container {
+            max-width: 1536px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #78350f;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #92400e;
+        }
+
+        .bonus-alert {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            border: 4px solid #fbbf24;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        .border-amber { border: 4px solid #fcd34d; }
+        .border-purple { border: 4px solid #d8b4fe; }
+        .border-blue { border: 4px solid #93c5fd; }
+
+        .banana-count {
+            font-size: 64px;
+            font-weight: bold;
+            color: #d97706;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .banana-label {
+            font-size: 32px;
+            color: #92400e;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .per-second {
+            font-size: 18px;
+            color: #16a34a;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            width: 100%;
+            font-weight: bold;
+            padding: 24px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+            color: white;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .btn:disabled {
+            background: #9ca3af !important;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .btn-harvest {
+            background: linear-gradient(to right, #fbbf24, #f59e0b);
+        }
+
+        .btn-worker {
+            background: linear-gradient(to right, #10b981, #059669);
+            font-size: 20px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #7c3aed;
+            margin-bottom: 16px;
+        }
+
+        .unlocked-list {
+            max-height: 384px;
+            overflow-y: auto;
+        }
+
+        .unlocked-item {
+            background: linear-gradient(to right, #f3e8ff, #e9d5ff);
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #d8b4fe;
+            margin-bottom: 8px;
+        }
+
+        .unlocked-name {
+            font-weight: bold;
+            color: #5b21b6;
+            margin-bottom: 4px;
+        }
+
+        .unlocked-meaning {
+            font-size: 14px;
+            color: #7c3aed;
+            margin-bottom: 4px;
+        }
+
+        .unlocked-bonus {
+            font-size: 12px;
+            color: #16a34a;
+        }
+
+        .empty-state {
+            color: #6b7280;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .available-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .available-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .available-item {
+            padding: 16px;
+            border-radius: 8px;
+            border: 2px solid;
+            transition: all 0.2s;
+        }
+
+        .available-item.can-unlock {
+            background: linear-gradient(to right, #dbeafe, #bfdbfe);
+            border-color: #60a5fa;
+            cursor: pointer;
+        }
+
+        .available-item.can-unlock:hover {
+            border-color: #2563eb;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .available-item.locked {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .available-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 4px;
+        }
+
+        .available-meaning {
+            font-size: 14px;
+            color: #6b7280;
+            font-style: italic;
+            margin-bottom: 4px;
+        }
+
+        .available-bonus {
+            font-size: 12px;
+            color: #16a34a;
+            margin-bottom: 8px;
+        }
+
+        .available-cost {
+            font-weight: bold;
+            color: #d97706;
+        }
+
+        .can-take {
+            color: #16a34a;
+            margin-left: 8px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            border: 4px solid #a78bfa;
+        }
+
+        .quiz-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #7c3aed;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .quiz-question {
+            font-size: 20px;
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 20px;
+        }
+
+        .choice-btn {
+            width: 100%;
+            padding: 16px;
+            margin-bottom: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            border: 2px solid #a78bfa;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+
+        .choice-btn:hover:not(:disabled) {
+            background: #f3e8ff;
+            border-color: #7c3aed;
+        }
+
+        .choice-btn.correct {
+            background: #dcfce7;
+            border-color: #16a34a;
+            color: #15803d;
+        }
+
+        .choice-btn.incorrect {
+            background: #fee2e2;
+            border-color: #dc2626;
+            color: #991b1b;
+        }
+
+        .choice-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .feedback {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .feedback.incorrect {
+            background: #fee2e2;
+            border: 2px solid #dc2626;
+            color: #991b1b;
+        }
+
+        .feedback.correct {
+            background: #dcfce7;
+            border: 2px solid #16a34a;
+            color: #15803d;
+        }
+
+        .next-unlock {
+            margin-top: 16px;
+            padding: 12px;
+            background: #fef3c7;
+            border-radius: 8px;
+            border: 2px solid #fbbf24;
+            text-align: center;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🍌 God's Name Clicker 🍌</h1>
+            <p class="subtitle">Learn the names of God while harvesting bananas!</p>
+        </div>
+
+        <div id="bonusAlert" class="bonus-alert">
+            <div id="bonusText"></div>
+        </div>
+
+        <div class="grid">
+            <div class="card border-amber">
+                <div class="banana-count" id="bananaCount">0</div>
+                <div class="banana-label">🍌 Bananas</div>
+                <div class="per-second">📈 +<span id="perSecond">0</span>/second</div>
+                <button class="btn btn-harvest" onclick="harvestBanana()">
+                    🍌 Harvest Banana (+<span id="clickPower">1</span>)
+                </button>
+                <button class="btn btn-worker" onclick="hireWorker()" id="workerBtn">
+                    👷 Hire Worker (<span id="workerCount">0</span>) - Cost: <span id="workerCost">10</span> 🍌
+                </button>
+            </div>
+
+            <div class="card border-purple">
+                <div class="section-title">✨ God's Names Unlocked (<span id="unlockedCount">0</span>/15)</div>
+                <div class="unlocked-list" id="unlockedList">
+                    <p class="empty-state">No names unlocked yet. Take the quiz to unlock them!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-blue">
+            <div class="section-title">❓ Available God's Names (Take Quiz to Unlock)</div>
+            <div class="available-grid" id="availableGrid"></div>
+            <div id="nextUnlockInfo"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="quizModal">
+        <div class="modal-content">
+            <div class="quiz-title">📖 Quiz Time!</div>
+            <div class="quiz-question" id="quizQuestion"></div>
+            <div id="quizChoices"></div>
+            <div id="quizFeedback"></div>
+            <button class="btn" style="background: #9ca3af;" onclick="cancelQuiz()" id="cancelBtn">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        const GODS_NAMES = [
+            { name: "El Shaddai", meaning: "God Almighty", bonus: "2x worker income", cost: 100 },
+            { name: "El Elyon", meaning: "The Most High God", bonus: "3x click power", cost: 250 },
+            { name: "Adonai", meaning: "Lord, Master", bonus: "Auto-harvest", cost: 500 },
+            { name: "Yahweh", meaning: "Lord Jehovah", bonus: "5x income", cost: 1000 },
+            { name: "Jehovah Jireh", meaning: "The Lord is My Provider", bonus: "Passive +10/s", cost: 2000 },
+            { name: "Jehovah Raah", meaning: "The Lord is My Shepherd", bonus: "Workers cost 50% less", cost: 3500 },
+            { name: "Jehovah Rophi", meaning: "The Lord That Heals", bonus: "Restore bonuses", cost: 5000 },
+            { name: "Jehovah Shammah", meaning: "The Lord Is There", bonus: "Omnipresent income 8x", cost: 7500 },
+            { name: "Jehovah Tsidkenu", meaning: "The Lord Our Righteousness", bonus: "Pure profit +20/s", cost: 10000 },
+            { name: "Jehovah Nissi", meaning: "The Lord Who Sanctifies You", bonus: "Holy harvest x10", cost: 15000 },
+            { name: "El Olam", meaning: "The Everlasting God", bonus: "Eternal earnings 15x", cost: 25000 },
+            { name: "Elohim", meaning: "God, Creator", bonus: "Create bananas 25x", cost: 40000 },
+            { name: "Emmanuel", meaning: "God With Us", bonus: "God's presence x50", cost: 75000 },
+            { name: "Jehovah Shalom", meaning: "The Lord Will Provide", bonus: "Peaceful prosperity 100x", cost: 150000 },
+            { name: "Jehovah Sabaoth", meaning: "The Lord of Hosts", bonus: "Army of workers 200x", cost: 300000 }
+        ];
+
+        let bananas = 0;
+        let bananasPerSecond = 0;
+        let clickPower = 1;
+        let workers = 0;
+        let workerCost = 10;
+        let unlockedNames = [];
+        let currentQuiz = null;
+        let isProcessing = false;
+
+        function calculateBananasPerSecond() {
+            let baseRate = workers * 0.5;
+            
+            if (unlockedNames.includes("El Shaddai")) {
+                baseRate = workers * 1.0;
+            }
+            
+            let multiplier = 1;
+            
+            if (unlockedNames.includes("Jehovah Jireh")) baseRate += 10;
+            if (unlockedNames.includes("Jehovah Tsidkenu")) baseRate += 20;
+            if (unlockedNames.includes("Jehovah Shammah")) multiplier *= 8;
+            if (unlockedNames.includes("El Olam")) multiplier *= 15;
+            if (unlockedNames.includes("Emmanuel")) multiplier *= 50;
+            if (unlockedNames.includes("Jehovah Shalom")) multiplier *= 100;
+            if (unlockedNames.includes("Jehovah Sabaoth")) multiplier *= 200;
+            
+            bananasPerSecond = parseFloat((baseRate * multiplier).toFixed(1));
+        }
+
+        function getClickPower() {
+            let power = clickPower;
+            if (unlockedNames.includes("El Elyon")) power *= 3;
+            if (unlockedNames.includes("Jehovah Nissi")) power *= 10;
+            if (unlockedNames.includes("Emmanuel")) power *= 50;
+            return power;
+        }
+
+        function harvestBanana() {
+            bananas += getClickPower();
+            updateDisplay();
+        }
+
+        function hireWorker() {
+            if (bananas >= workerCost) {
+                bananas -= workerCost;
+                workers++;
+                
+                let costMultiplier = 1.15;
+                if (unlockedNames.includes("Jehovah Raah")) {
+                    costMultiplier = 1.08;
+                }
+                
+                workerCost = Math.floor(workerCost * costMultiplier);
+                calculateBananasPerSecond();
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('bananaCount').textContent = Math.floor(bananas);
+            document.getElementById('perSecond').textContent = bananasPerSecond.toFixed(1);
+            document.getElementById('clickPower').textContent = getClickPower();
+            document.getElementById('workerCount').textContent = workers;
+            document.getElementById('workerCost').textContent = workerCost;
+            document.getElementById('unlockedCount').textContent = unlockedNames.length;
+            
+            document.getElementById('workerBtn').disabled = bananas < workerCost;
+        }
+
+        function showBonus(name, meaning, bonus) {
+            const alert = document.getElementById('bonusAlert');
+            const text = document.getElementById('bonusText');
+            text.innerHTML = `
+                <div style="font-size: 24px; font-weight: bold; color: #78350f; margin-bottom: 4px;">
+                    ✨ ${name} Unlocked! ✨
+                </div>
+                <div style="color: #92400e;">${meaning}</div>
+                <div style="color: #16a34a; font-weight: 600;">${bonus}</div>
+            `;
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 2500);
+        }
+
+        function renderUnlockedNames() {
+            const container = document.getElementById('unlockedList');
+            if (unlockedNames.length === 0) {
+                container.innerHTML = '<p class="empty-state">No names unlocked yet. Take the quiz to unlock them!</p>';
+            } else {
+                container.innerHTML = unlockedNames.map(name => {
+                    const data = GODS_NAMES.find(n => n.name === name);
+                    return `
+                        <div class="unlocked-item">
+                            <div class="unlocked-name">${data.name}</div>
+                            <div class="unlocked-meaning">${data.meaning}</div>
+                            <div class="unlocked-bonus">⚡ ${data.bonus}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function renderAvailableNames() {
+            const available = GODS_NAMES.filter(n => !unlockedNames.includes(n.name));
+            const container = document.getElementById('availableGrid');
+            
+            container.innerHTML = available.slice(0, 6).map(name => {
+                const canUnlock = bananas >= name.cost;
+                return `
+                    <div class="available-item ${canUnlock ? 'can-unlock' : 'locked'}" 
+                         onclick="${canUnlock ? `startQuiz('${name.name}')` : ''}">
+                        <div class="available-name">${name.name}</div>
+                        <div class="available-meaning">??? (Take quiz to reveal)</div>
+                        <div class="available-bonus">⚡ ${name.bonus}</div>
+                        <div class="available-cost">
+                            Cost: ${name.cost} 🍌
+                            ${canUnlock ? '<span class="can-take">✓ TAKE QUIZ</span>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const nextUnlock = available[0];
+            const infoDiv = document.getElementById('nextUnlockInfo');
+            if (nextUnlock && bananas < nextUnlock.cost) {
+                infoDiv.innerHTML = `
+                    <div class="next-unlock">
+                        Next unlock: <strong>${nextUnlock.name}</strong> - Need ${nextUnlock.cost - Math.floor(bananas)} more bananas
+                    </div>
+                `;
+            } else {
+                infoDiv.innerHTML = '';
+            }
+        }
+
+        function startQuiz(nameName) {
+            if (isProcessing) return;
+            
+            const nameData = GODS_NAMES.find(n => n.name === nameName);
+            if (bananas < nameData.cost) return;
+            
+            const wrongAnswers = GODS_NAMES
+                .filter(n => n.name !== nameData.name)
+                .map(n => n.meaning)
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 3);
+            
+            const allChoices = [...wrongAnswers, nameData.meaning]
+                .sort(() => Math.random() - 0.5);
+            
+            currentQuiz = { ...nameData, choices: allChoices };
+            
+            document.getElementById('quizQuestion').textContent = `What does "${nameData.name}" mean?`;
+            document.getElementById('quizChoices').innerHTML = allChoices.map((choice, i) => 
+                `<button class="choice-btn" onclick="submitAnswer(\`${choice}\`)">
+                    ${String.fromCharCode(65 + i)}. ${choice}
+                </button>`
+            ).join('');
+            document.getElementById('quizFeedback').innerHTML = '';
+            document.getElementById('quizModal').classList.add('active');
+            isProcessing = false;
+        }
+
+        function submitAnswer(selectedAnswer) {
+            if (isProcessing || !currentQuiz) return;
+            
+            isProcessing = true;
+            const isCorrect = selectedAnswer === currentQuiz.meaning;
+            const cost = currentQuiz.cost;
+            const name = currentQuiz.name;
+            
+            const buttons = document.querySelectorAll('.choice-btn');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                if (btn.textContent.includes(selectedAnswer)) {
+                    btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+                }
+            });
+            
+            if (isCorrect) {
+                bananas -= cost;
+                unlockedNames.push(name);
+                calculateBananasPerSecond();
+                document.getElementById('quizFeedback').innerHTML = 
+                    '<div class="feedback correct">✅ Correct! Unlocking now...</div>';
+                
+                setTimeout(() => {
+                    document.getElementById('quizModal').classList.remove('active');
+                    showBonus(currentQuiz.name, currentQuiz.meaning, currentQuiz.bonus);
+                    currentQuiz = null;
+                    isProcessing = false;
+                    renderUnlockedNames();
+                    renderAvailableNames();
+                    updateDisplay();
+                }, 2500);
+            } else {
+                bananas = Math.max(0, bananas - cost);
+                document.getElementById('quizFeedback').innerHTML = 
+                    `<div class="feedback incorrect">❌ Wrong! You lost ${cost} bananas. Quiz failed!</div>`;
+                document.getElementById('cancelBtn').disabled = true;
+                
+                setTimeout(() => {
+                    document.getElementById('quizModal').classList.remove('active');
+                    document.getElementById('cancelBtn').disabled = false;
+                    currentQuiz = null;
+                    isProcessing = false;
+                    renderAvailableNames();
+                    updateDisplay();
+                }, 2000);
+            }
+        }
+
+        function cancelQuiz() {
+            if (isProcessing) return;
+            document.getElementById('quizModal').classList.remove('active');
+            currentQuiz = null;
+        }
+
+        // Passive income
+        setInterval(() => {
+            bananas += bananasPerSecond;
+            updateDisplay();
+            renderAvailableNames();
+        }, 1000);
+
+        // Initial render
+        updateDisplay();
+        renderUnlockedNames();
+        renderAvailableNames();
+    </script>
+</body>
+</html>
